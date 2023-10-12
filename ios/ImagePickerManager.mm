@@ -77,6 +77,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 #if __has_include(<PhotosUI/PHPicker.h>)
     if (@available(iOS 14, *)) {
+        PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
+        if (status == PHAuthorizationStatusLimited) {
+            [self showLimitedPickerViewController];
+            return;
+        }
+
+        }
         if (target == library) {
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
             PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
@@ -116,6 +123,16 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     } else {
       [self showPickerViewController:picker];
     }
+}
+
+- (void) showLimitedPickerViewController {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (@available(iOS 14, *)) {
+            UIViewController *root = RCTPresentedViewController();
+            PHPhotoLibrary *limitedPicker = [[PHPhotoLibrary alloc] init];
+            [limitedPicker presentLimitedLibraryPickerFromViewController:root];
+        }
+    });
 }
 
 - (void) showPickerViewController:(UIViewController *)picker
